@@ -59,7 +59,7 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
 
     @Override
     public Integer getSourceWidth() {
-        return sourceHeight;
+        return sourceWidth;
     }
 
     @Override
@@ -106,7 +106,6 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
     public void onVideoSizeChanged(MediaPlayer player, int width, int height) {
         sourceWidth = width;
         sourceHeight = height;
-
     }
 
     @Override
@@ -122,9 +121,6 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
     }
 
     static class MuxDevice implements IDevice {
-        private static final String MUX_PLUGIN_NAME = "android-mux";
-        // TODO: what should this be? Surprised it's not the appVersion...
-        private static final String MUX_PLUGIN_VERSION = "0.4.5";
         private static final String MEDIA_PLAYER_SOFTWARE = "MediaPlayer";
 
         private String deviceId;
@@ -189,14 +185,10 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
         }
 
         @Override
-        public String getPluginName() {
-            return MUX_PLUGIN_NAME;
-        }
+        public String getPluginName() { return BuildConfig.MUX_PLUGIN_NAME; }
 
         @Override
-        public String getPluginVersion() {
-            return MUX_PLUGIN_VERSION;
-        }
+        public String getPluginVersion() { return BuildConfig.MUX_PLUGIN_VERSION; }
 
         @Override
         public String getPlayerSoftware() {

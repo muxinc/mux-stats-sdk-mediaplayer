@@ -11,13 +11,16 @@ android {
         versionCode 1
         versionName "1.0"
 
+        buildConfigField("String", "MUX_PLUGIN_VERSION", "\"${versionName}\"")
+        buildConfigField("String", "MUX_PLUGIN_NAME", "android-mediaplayer-mux")
+
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
     }
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
