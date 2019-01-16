@@ -15,7 +15,7 @@ import android.widget.MediaController;
 import java.io.IOException;
 
 public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedListener,
-        SurfaceHolder.Callback, MediaPlayer.OnCompletionListener {
+        SurfaceHolder.Callback, MediaPlayer.OnCompletionListener, MediaPlayer.OnVideoSizeChangedListener {
     private static final String DEMO_URI = "https://html5demos.com/assets/dizzy.mp4";
     private static final String TAG = "PlayerActivity";
 
@@ -29,40 +29,43 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
         super.onCreate(savedInstanceState);
         setContentView(R.layout.player_activity);
 
-        player = new MediaPlayer();
-        mediaController = new MediaController(this);
-        player.setOnPreparedListener(this);
-        player.setOnCompletionListener(this);
-        try {
-            player.setDataSource(DEMO_URI);
-            // TODO: make this async
-            // https://stackoverflow.com/questions/2961749/mediacontroller-with-mediaplayer
-            player.prepare();
-            Log.d(TAG, "media player prepared");
-        } catch (IOException e) {
-            Log.d(TAG, "player unable to load uri " + e.toString());
-        }
         playerView = findViewById(R.id.video_view);
         playerView.getHolder().addCallback(this);
+
+        player = new MediaPlayer();
+        player.setOnPreparedListener(this);
+        player.setOnCompletionListener(this);
+        player.setOnVideoSizeChangedListener(this);
+        try {
+            player.setDataSource(DEMO_URI);
+            player.prepareAsync();
+        } catch (IOException e) {
+            Log.e(TAG, "player unable to load uri " + e.toString());
+        }
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        player.release();
+        if (player != null) {
+            player.release();
+        }
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        mediaController.show();
+        if (mediaController != null) {
+            mediaController.show();
+        }
         return super.onTouchEvent(event);
     }
 
     @Override
     public void onPrepared(MediaPlayer mediaPlayer) {
+        // Attach media player controls and display them.
+        mediaController = new MediaController(this);
         mediaController.setMediaPlayer(new MediaPlayerControl());
         mediaController.setAnchorView(findViewById(R.id.video_view_container));
-
         handler.post(new Runnable() {
             @Override
             public void run() {
@@ -75,14 +78,6 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         player.setDisplay(holder);
-
-        int videoWidth = player.getVideoWidth();
-        int videoHeight = player.getVideoHeight();
-        int screenWidth = getWindowManager().getDefaultDisplay().getWidth();
-        ViewGroup.LayoutParams layoutParams = playerView.getLayoutParams();
-        layoutParams.width = screenWidth;
-        layoutParams.height = (int) (((float)videoHeight / (float)videoWidth) * (float)screenWidth);
-        playerView.setLayoutParams(layoutParams);
     }
 
     @Override
@@ -100,7 +95,25 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
         mediaController.show(0);
     }
 
-    private class MediaPlayerControl implements MediaController.MediaPlayerControl {
+    @Override
+    public void onVideoSizeChanged(MediaPlayer mp, int width, int height) {
+        // Set size of SurfaceView that holds MediaPlayer.
+        // Note: this assumes video is full width and height needs to be scaled.
+        int screenWidth = getWindowManager().getDefaultDisplay().getWidth();
+        ViewGroup.LayoutParams layoutParams = playerView.getLayoutParams();
+        layoutParams.width = screenWidth;
+        layoutParams.height = (int) (((float)height / (float)width) * (float)screenWidth);
+        playerView.setLayoutParams(layoutParams);
+    }
+
+    private class MediaPlayerControl implements MediaController.MediaPlayerControl,
+            MediaPlayer.OnBufferingUpdateListener {
+        private int bufferPercent;
+
+        public MediaPlayerControl() {
+            player.setOnBufferingUpdateListener(this);
+        }
+
         @Override
         public void start() {
             player.start();
@@ -133,7 +146,7 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
 
         @Override
         public int getBufferPercentage() {
-            return 0;
+            return bufferPercent;
         }
 
         @Override
@@ -154,6 +167,11 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
         @Override
         public int getAudioSessionId() {
             return player.getAudioSessionId();
+        }
+
+        @Override
+        public void onBufferingUpdate(MediaPlayer mp, int percent) {
+            bufferPercent = percent;
         }
     }
 }
