@@ -12,7 +12,7 @@ android {
         versionName "1.0"
 
         buildConfigField("String", "MUX_PLUGIN_VERSION", "\"${versionName}\"")
-        buildConfigField("String", "MUX_PLUGIN_NAME", "android-mediaplayer-mux")
+        buildConfigField("String", "MUX_PLUGIN_NAME", "\"android-mediaplayer-mux\"")
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 

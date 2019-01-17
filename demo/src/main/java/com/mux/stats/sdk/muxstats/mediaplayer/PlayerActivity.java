@@ -2,7 +2,6 @@ package com.mux.stats.sdk.muxstats.mediaplayer;
 
 import android.app.Activity;
 import android.media.MediaPlayer;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -12,14 +11,21 @@ import android.view.SurfaceView;
 import android.view.ViewGroup;
 import android.widget.MediaController;
 
+import com.mux.stats.sdk.core.model.CustomerPlayerData;
+import com.mux.stats.sdk.core.model.CustomerVideoData;
+
 import java.io.IOException;
 
 public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedListener,
-        SurfaceHolder.Callback, MediaPlayer.OnCompletionListener, MediaPlayer.OnVideoSizeChangedListener {
-    private static final String DEMO_URI = "https://html5demos.com/assets/dizzy.mp4";
+        SurfaceHolder.Callback, MediaPlayer.OnCompletionListener,
+        MediaPlayer.OnVideoSizeChangedListener {
     private static final String TAG = "PlayerActivity";
+    private static final String MUX_ENVIRONMENT_KEY="84c4ps9d15i4ts1pqqgl1pbh4";
+
+    private static final String DEMO_URI = "https://html5demos.com/assets/dizzy.mp4";
 
     private MediaPlayer player;
+    private MuxStatsMediaPlayer muxStats;
     private MediaController mediaController;
     private SurfaceView playerView;
     private Handler handler = new Handler();
@@ -33,6 +39,14 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
         playerView.getHolder().addCallback(this);
 
         player = new MediaPlayer();
+
+        CustomerPlayerData customerPlayerData = new CustomerPlayerData();
+        customerPlayerData.setEnvironmentKey(MUX_ENVIRONMENT_KEY);
+        CustomerVideoData customerVideoData = new CustomerVideoData();
+        customerVideoData.setVideoTitle("DIZZY");
+        muxStats = new MuxStatsMediaPlayer(this, player, "demo-player", customerPlayerData,
+                customerVideoData);
+
         player.setOnPreparedListener(this);
         player.setOnCompletionListener(this);
         player.setOnVideoSizeChangedListener(this);
@@ -92,11 +106,19 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
 
     @Override
     public void onCompletion(MediaPlayer mp) {
-        mediaController.show(0);
+        if (muxStats != null) {
+            muxStats.onCompletion(mp);
+        }
+        if (mediaController != null) {
+            mediaController.show(0);
+        }
     }
 
     @Override
     public void onVideoSizeChanged(MediaPlayer mp, int width, int height) {
+        if (muxStats != null) {
+            muxStats.onVideoSizeChanged(mp, width, height);
+        }
         // Set size of SurfaceView that holds MediaPlayer.
         // Note: this assumes video is full width and height needs to be scaled.
         int screenWidth = getWindowManager().getDefaultDisplay().getWidth();
@@ -116,6 +138,7 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
 
         @Override
         public void start() {
+            muxStats.play();
             player.start();
         }
 
