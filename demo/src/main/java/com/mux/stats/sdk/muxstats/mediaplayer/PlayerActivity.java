@@ -22,7 +22,8 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
     private static final String TAG = "PlayerActivity";
     private static final String MUX_ENVIRONMENT_KEY="84c4ps9d15i4ts1pqqgl1pbh4";
 
-    private static final String DEMO_URI = "https://html5demos.com/assets/dizzy.mp4";
+    private static final String DEMO_VIDEO_TITLE = "Screens 1080p";
+    private static final String DEMO_URI = "https://storage.googleapis.com/exoplayer-test-media-1/gen-3/screens/dash-vod-single-segment/video-137.mp4";
 
     private MediaPlayer player;
     private MuxStatsMediaPlayer muxStats;
@@ -43,7 +44,7 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
         CustomerPlayerData customerPlayerData = new CustomerPlayerData();
         customerPlayerData.setEnvironmentKey(MUX_ENVIRONMENT_KEY);
         CustomerVideoData customerVideoData = new CustomerVideoData();
-        customerVideoData.setVideoTitle("DIZZY");
+        customerVideoData.setVideoTitle(DEMO_VIDEO_TITLE);
         muxStats = new MuxStatsMediaPlayer(this, player, "demo-player", customerPlayerData,
                 customerVideoData);
 
@@ -64,6 +65,9 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
         if (player != null) {
             player.release();
         }
+        if (muxStats != null) {
+            muxStats.release();
+        }
     }
 
     @Override
@@ -76,6 +80,7 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
 
     @Override
     public void onPrepared(MediaPlayer mediaPlayer) {
+        muxStats.setIsPlayerPrepared(true);
         // Attach media player controls and display them.
         mediaController = new MediaController(this);
         mediaController.setMediaPlayer(new MediaPlayerControl());
@@ -138,13 +143,14 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
 
         @Override
         public void start() {
-            muxStats.play();
             player.start();
+            muxStats.play();
         }
 
         @Override
         public void pause() {
             player.pause();
+            muxStats.pause();
         }
 
         @Override
@@ -159,6 +165,7 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
 
         @Override
         public void seekTo(int pos) {
+            muxStats.seeking();
             player.seekTo(pos);
         }
 

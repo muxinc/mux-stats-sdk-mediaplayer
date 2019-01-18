@@ -10,10 +10,14 @@ import android.util.Log;
 import android.view.View;
 
 import com.mux.stats.sdk.core.events.EventBus;
+import com.mux.stats.sdk.core.events.IEvent;
 import com.mux.stats.sdk.core.events.playback.EndedEvent;
 import com.mux.stats.sdk.core.events.playback.ErrorEvent;
+import com.mux.stats.sdk.core.events.playback.PauseEvent;
 import com.mux.stats.sdk.core.events.playback.PlayEvent;
 import com.mux.stats.sdk.core.events.playback.PlayingEvent;
+import com.mux.stats.sdk.core.events.playback.SeekedEvent;
+import com.mux.stats.sdk.core.events.playback.SeekingEvent;
 import com.mux.stats.sdk.core.model.CustomerPlayerData;
 import com.mux.stats.sdk.core.model.CustomerVideoData;
 import com.mux.stats.sdk.core.util.MuxLogger;
@@ -25,7 +29,8 @@ import java.lang.ref.WeakReference;
 
 public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
         MediaPlayer.OnCompletionListener, MediaPlayer.OnErrorListener,
-        MediaPlayer.OnInfoListener, MediaPlayer.OnVideoSizeChangedListener {
+        MediaPlayer.OnInfoListener, MediaPlayer.OnSeekCompleteListener,
+        MediaPlayer.OnVideoSizeChangedListener {
     protected static final String TAG = "MuxStatsMediaPlayer";
 
     protected MuxStats muxStats;
@@ -35,6 +40,7 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
     protected Integer sourceWidth;
     protected Integer sourceHeight;
     protected boolean isBuffering;
+    protected boolean isPlayerPrepared = false;
 
     /**
      * This class calls the following methods on {@code player} to set itself as the listener:
@@ -42,6 +48,7 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
      *     <li>{@link android.media.MediaPlayer#setOnCompletionListener}</li>
      *     <li>{@link android.media.MediaPlayer#setOnErrorListener}</li>
      *     <li>{@link android.media.MediaPlayer#setOnInfoListener}</li>
+     *     <li>{@link android.media.MediaPlayer#setOnSeekCompleteListener}</li>
      *     <li>{@link android.media.MediaPlayer#setOnVideoSizeChangedListener}</li>
      * </ul>
      *
@@ -68,6 +75,7 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
             player.get().setOnCompletionListener(this);
             player.get().setOnErrorListener(this);
             player.get().setOnInfoListener(this);
+            player.get().setOnSeekCompleteListener(this);
             player.get().setOnVideoSizeChangedListener(this);
         }
     }
@@ -81,9 +89,12 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
 
     @Override
     public String getMimeType() {
-        if (Build.VERSION.SDK_INT >= 26 && player != null && player.get() != null)
+        // TODO: Other versions?
+        if (Build.VERSION.SDK_INT >= 26 && player != null && player.get() != null
+                && player.get().getMetrics() != null) {
             return player.get().getMetrics()
                     .getString(MediaPlayer.MetricsConstants.MIME_TYPE_VIDEO);
+        }
         return null;
     }
 
@@ -99,7 +110,7 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
 
     @Override
     public Long getSourceDuration() {
-        if (player != null && player.get() != null)
+        if (isPlayerPrepared && player != null && player.get() != null)
             return Long.valueOf(player.get().getDuration());
         return null;
     }
@@ -160,12 +171,54 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
 
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
+        // TODO: fix spurious error -38 when player is initializing
+        // https://stackoverflow.com/questions/9008770/media-player-called-in-state-0-error-38-0
         dispatch(new ErrorEvent(null));
         return false;
     }
 
+    @Override
+    public void onSeekComplete(MediaPlayer mp) {
+        dispatch(new SeekedEvent(null));
+        if (player.get().isPlaying()) {
+            dispatch(new PlayingEvent(null));
+        }
+    }
+
     public void play() {
         dispatch(new PlayEvent(null));
+        if (player.get().isPlaying()) {
+            dispatch(new PlayingEvent(null));
+        }
+    }
+
+    public void pause() {
+        dispatch(new PauseEvent(null));
+    }
+
+    public void seeking() {
+        dispatch(new SeekingEvent(null));
+    }
+
+    public void release() {
+        muxStats.release();
+        muxStats = null;
+        player = null;
+        playerView = null;
+    }
+
+    @Override
+    public void dispatch(IEvent event) {
+        Log.d("MuxEventDispatch", event.toString());
+        super.dispatch(event);
+    }
+
+    /**
+     * Should be set to true once {@link MediaPlayer#setDataSource} has been called. Should be
+     * set to false if {@link MediaPlayer#reset} is called on the encapsulated player.
+     */
+    public void setIsPlayerPrepared(boolean isPrepared) {
+        isPlayerPrepared = isPrepared;
     }
 
     static class MuxDevice implements IDevice {
