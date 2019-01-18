@@ -1,6 +1,7 @@
 package com.mux.stats.sdk.muxstats.mediaplayer;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Point;
 import android.media.MediaPlayer;
 import android.os.Bundle;
@@ -23,8 +24,7 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
     private static final String TAG = "PlayerActivity";
     private static final String MUX_ENVIRONMENT_KEY="84c4ps9d15i4ts1pqqgl1pbh4";
 
-    private static final String DEMO_VIDEO_TITLE = "Screens 1080p";
-    private static final String DEMO_URI = "https://storage.googleapis.com/exoplayer-test-media-1/gen-3/screens/dash-vod-single-segment/video-137.mp4";
+    public static final String VIDEO_TITLE_EXTRA = "video_title";
 
     private MediaPlayer player;
     private MuxStatsMediaPlayer muxStats;
@@ -42,10 +42,11 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
 
         player = new MediaPlayer();
 
+        Intent intent = getIntent();
         CustomerPlayerData customerPlayerData = new CustomerPlayerData();
         customerPlayerData.setEnvironmentKey(MUX_ENVIRONMENT_KEY);
         CustomerVideoData customerVideoData = new CustomerVideoData();
-        customerVideoData.setVideoTitle(DEMO_VIDEO_TITLE);
+        customerVideoData.setVideoTitle(intent.getStringExtra(VIDEO_TITLE_EXTRA));
         muxStats = new MuxStatsMediaPlayer(this, player, "demo-player", customerPlayerData,
                 customerVideoData);
         Point size = new Point();
@@ -59,7 +60,7 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
         player.setOnSeekCompleteListener(muxStats.getOnSeekCompleteListener(null));
         player.setOnVideoSizeChangedListener(muxStats.getOnVideoSizeChangedListener(this));
         try {
-            player.setDataSource(DEMO_URI);
+            player.setDataSource(this, intent.getData());
             player.prepareAsync();
         } catch (IOException e) {
             Log.e(TAG, "player unable to load uri " + e.toString());
