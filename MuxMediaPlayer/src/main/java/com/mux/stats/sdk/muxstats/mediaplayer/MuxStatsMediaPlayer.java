@@ -211,12 +211,6 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
         playerView = null;
     }
 
-    @Override
-    public void dispatch(IEvent event) {
-        Log.d("MuxEventDispatch", event.toString());
-        super.dispatch(event);
-    }
-
     /**
      * Should be set to true once {@link MediaPlayer#setDataSource} has been called. Should be
      * set to false if {@link MediaPlayer#reset} is called on the encapsulated player.
