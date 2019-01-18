@@ -1,6 +1,7 @@
 package com.mux.stats.sdk.muxstats.mediaplayer;
 
 import android.app.Activity;
+import android.graphics.Point;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
@@ -47,6 +48,9 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
         customerVideoData.setVideoTitle(DEMO_VIDEO_TITLE);
         muxStats = new MuxStatsMediaPlayer(this, player, "demo-player", customerPlayerData,
                 customerVideoData);
+        Point size = new Point();
+        getWindowManager().getDefaultDisplay().getSize(size);
+        muxStats.setScreenSize(size.x, size.y);
 
         player.setOnPreparedListener(this);
         player.setOnCompletionListener(this);
@@ -126,7 +130,9 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
         }
         // Set size of SurfaceView that holds MediaPlayer.
         // Note: this assumes video is full width and height needs to be scaled.
-        int screenWidth = getWindowManager().getDefaultDisplay().getWidth();
+        Point size = new Point();
+        getWindowManager().getDefaultDisplay().getSize(size);
+        int screenWidth = size.x;
         ViewGroup.LayoutParams layoutParams = playerView.getLayoutParams();
         layoutParams.width = screenWidth;
         layoutParams.height = (int) (((float)height / (float)width) * (float)screenWidth);

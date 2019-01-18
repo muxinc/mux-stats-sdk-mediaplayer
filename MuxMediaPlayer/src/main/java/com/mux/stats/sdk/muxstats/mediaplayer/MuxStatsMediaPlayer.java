@@ -185,6 +185,10 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
         }
     }
 
+    public void setScreenSize(int width, int height) {
+        muxStats.setScreenSize(width, height);
+    }
+
     public void play() {
         dispatch(new PlayEvent(null));
         if (player.get().isPlaying()) {
