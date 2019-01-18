@@ -53,8 +53,11 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
         muxStats.setScreenSize(size.x, size.y);
 
         player.setOnPreparedListener(this);
-        player.setOnCompletionListener(this);
-        player.setOnVideoSizeChangedListener(this);
+        player.setOnCompletionListener(muxStats.getOnCompletionListener(this));
+        player.setOnErrorListener(muxStats.getOnErrorListener(null));
+        player.setOnInfoListener(muxStats.getOnInfoListener(null));
+        player.setOnSeekCompleteListener(muxStats.getOnSeekCompleteListener(null));
+        player.setOnVideoSizeChangedListener(muxStats.getOnVideoSizeChangedListener(this));
         try {
             player.setDataSource(DEMO_URI);
             player.prepareAsync();
@@ -115,9 +118,6 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
 
     @Override
     public void onCompletion(MediaPlayer mp) {
-        if (muxStats != null) {
-            muxStats.onCompletion(mp);
-        }
         if (mediaController != null) {
             mediaController.show(0);
         }
@@ -125,9 +125,6 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
 
     @Override
     public void onVideoSizeChanged(MediaPlayer mp, int width, int height) {
-        if (muxStats != null) {
-            muxStats.onVideoSizeChanged(mp, width, height);
-        }
         // Set size of SurfaceView that holds MediaPlayer.
         // Note: this assumes video is full width and height needs to be scaled.
         Point size = new Point();
