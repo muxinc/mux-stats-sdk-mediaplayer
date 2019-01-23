@@ -12,6 +12,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.ViewGroup;
 import android.widget.MediaController;
+import android.widget.Toast;
 
 import com.mux.stats.sdk.core.model.CustomerPlayerData;
 import com.mux.stats.sdk.core.model.CustomerVideoData;
@@ -20,7 +21,7 @@ import java.io.IOException;
 
 public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedListener,
         SurfaceHolder.Callback, MediaPlayer.OnCompletionListener,
-        MediaPlayer.OnVideoSizeChangedListener {
+        MediaPlayer.OnVideoSizeChangedListener, MediaPlayer.OnErrorListener {
     private static final String TAG = "PlayerActivity";
     private static final String MUX_ENVIRONMENT_KEY="84c4ps9d15i4ts1pqqgl1pbh4";
 
@@ -55,7 +56,7 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
 
         player.setOnPreparedListener(this);
         player.setOnCompletionListener(muxStats.getOnCompletionListener(this));
-        player.setOnErrorListener(muxStats.getOnErrorListener(null));
+        player.setOnErrorListener(muxStats.getOnErrorListener(this));
         player.setOnInfoListener(muxStats.getOnInfoListener(null));
         player.setOnSeekCompleteListener(muxStats.getOnSeekCompleteListener(null));
         player.setOnVideoSizeChangedListener(muxStats.getOnVideoSizeChangedListener(this));
@@ -70,11 +71,18 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
     @Override
     protected void onStop() {
         super.onStop();
-        if (player != null) {
-            player.release();
-        }
+        releasePlayer();
+
         if (muxStats != null) {
             muxStats.release();
+            muxStats = null;
+        }
+    }
+
+    private void releasePlayer() {
+        if (player != null) {
+            player.release();
+            player = null;
         }
     }
 
@@ -135,6 +143,14 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
         layoutParams.width = screenWidth;
         layoutParams.height = (int) (((float)height / (float)width) * (float)screenWidth);
         playerView.setLayoutParams(layoutParams);
+    }
+
+    @Override
+    public boolean onError(MediaPlayer mp, int what, int extra) {
+        releasePlayer();
+        mediaController.setEnabled(false);
+        Toast.makeText(getApplicationContext(), "Playback failed", Toast.LENGTH_LONG).show();
+        return false;
     }
 
     private class MediaPlayerControl implements MediaController.MediaPlayerControl,

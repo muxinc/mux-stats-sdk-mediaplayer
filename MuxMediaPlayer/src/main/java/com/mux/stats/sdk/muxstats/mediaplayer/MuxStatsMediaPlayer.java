@@ -89,7 +89,7 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
 
     @Override
     public long getCurrentPosition() {
-        if (player != null && player.get() != null)
+        if (isPlayerPrepared && player != null && player.get() != null)
             return player.get().getCurrentPosition();
         return 0;
     }
@@ -98,7 +98,7 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
     public String getMimeType() {
         // TODO: Other versions?
         if (Build.VERSION.SDK_INT >= 26 && player != null && player.get() != null
-                && player.get().getMetrics() != null) {
+                && isPlayerPrepared && player.get().getMetrics() != null) {
             return player.get().getMetrics()
                     .getString(MediaPlayer.MetricsConstants.MIME_TYPE_VIDEO);
         }
@@ -117,8 +117,9 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
 
     @Override
     public Long getSourceDuration() {
-        if (isPlayerPrepared && player != null && player.get() != null)
+        if (isPlayerPrepared && player != null && player.get() != null) {
             return Long.valueOf(player.get().getDuration());
+        }
         return null;
     }
 
@@ -190,14 +191,13 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
 
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
+        isPlayerPrepared = false;
         if (onErrorListener != null && onErrorListener.get() != null) {
             onErrorListener.get().onError(mp, what, extra);
         }
 
-        // TODO: fix spurious error -38 when player is initializing
-        // https://stackoverflow.com/questions/9008770/media-player-called-in-state-0-error-38-0
         dispatch(new ErrorEvent(null));
-        return false;
+        return true;
     }
 
     @Override
