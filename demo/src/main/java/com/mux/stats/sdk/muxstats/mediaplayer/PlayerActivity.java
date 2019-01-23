@@ -10,9 +10,9 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.MediaController;
-import android.widget.Toast;
 
 import com.mux.stats.sdk.core.model.CustomerPlayerData;
 import com.mux.stats.sdk.core.model.CustomerVideoData;
@@ -112,7 +112,9 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
-        player.setDisplay(holder);
+        if (player != null) {
+            player.setDisplay(holder);
+        }
     }
 
     @Override
@@ -148,8 +150,10 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
         releasePlayer();
-        mediaController.setEnabled(false);
-        Toast.makeText(getApplicationContext(), "Playback failed", Toast.LENGTH_LONG).show();
+        if (mediaController != null) {
+            mediaController.setEnabled(false);
+        }
+        findViewById(R.id.error_text_view).setVisibility(View.VISIBLE);
         return false;
     }
 
@@ -163,35 +167,50 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
 
         @Override
         public void start() {
-            player.start();
-            muxStats.play();
+            if (player != null) {
+                player.start();
+                muxStats.play();
+            }
         }
 
         @Override
         public void pause() {
-            player.pause();
-            muxStats.pause();
+            if (player != null) {
+                player.pause();
+                muxStats.pause();
+            }
         }
 
         @Override
         public int getDuration() {
-            return player.getDuration();
+            if (player != null) {
+                return player.getDuration();
+            }
+            return 0;
         }
 
         @Override
         public int getCurrentPosition() {
-            return player.getCurrentPosition();
+            if (player != null) {
+                return player.getCurrentPosition();
+            }
+            return 0;
         }
 
         @Override
         public void seekTo(int pos) {
-            muxStats.seeking();
-            player.seekTo(pos);
+            if (player != null) {
+                muxStats.seeking();
+                player.seekTo(pos);
+            }
         }
 
         @Override
         public boolean isPlaying() {
-            return player.isPlaying();
+            if (player != null) {
+                return player.isPlaying();
+            }
+            return false;
         }
 
         @Override
@@ -216,7 +235,10 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
 
         @Override
         public int getAudioSessionId() {
-            return player.getAudioSessionId();
+            if (player != null) {
+                return player.getAudioSessionId();
+            }
+            return 0;
         }
 
         @Override
