@@ -137,6 +137,10 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
         return isBuffering;
     }
 
+    public void setPlayerView(View view) {
+        playerView = new WeakReference<>(view);
+    }
+
     @Override
     public int getPlayerViewWidth() {
         if (playerView != null && playerView.get() != null) {

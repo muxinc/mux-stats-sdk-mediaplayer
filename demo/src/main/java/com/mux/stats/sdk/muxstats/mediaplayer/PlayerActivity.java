@@ -53,6 +53,7 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
         Point size = new Point();
         getWindowManager().getDefaultDisplay().getSize(size);
         muxStats.setScreenSize(size.x, size.y);
+        muxStats.setPlayerView(playerView);
 
         player.setOnPreparedListener(this);
         player.setOnCompletionListener(muxStats.getOnCompletionListener(this));
