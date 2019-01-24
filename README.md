@@ -23,10 +23,7 @@ Three options for getting the AAR:
 `MuxMediaPlayer` module. Find the AAR in
 `mux-stats-sdk-mediaplayer/MuxMediaPlayer/build/outputs/aar/MuxMediaPlayer-release.aar`
 3. Clone this repo and build the AAR on the command line
-
         ./gradlew :MuxMediaPlayer:assembleRelease
-Find the AAR in `mux-stats-sdk-mediaplayer/MuxMediaPlayer/build/outputs/aar/MuxMediaPlayer-release.aar`
-
 
 ### 2. Import the AAR
 
