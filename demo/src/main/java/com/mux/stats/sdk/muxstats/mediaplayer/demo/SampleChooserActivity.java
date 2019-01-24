@@ -1,4 +1,4 @@
-package com.mux.stats.sdk.muxstats.mediaplayer;
+package com.mux.stats.sdk.muxstats.mediaplayer.demo;
 
 import android.app.Activity;
 import android.content.Context;

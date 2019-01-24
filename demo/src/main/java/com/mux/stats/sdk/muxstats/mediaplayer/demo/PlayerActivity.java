@@ -1,4 +1,4 @@
-package com.mux.stats.sdk.muxstats.mediaplayer;
+package com.mux.stats.sdk.muxstats.mediaplayer.demo;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -16,6 +16,7 @@ import android.widget.MediaController;
 
 import com.mux.stats.sdk.core.model.CustomerPlayerData;
 import com.mux.stats.sdk.core.model.CustomerVideoData;
+import com.mux.stats.sdk.muxstats.mediaplayer.MuxStatsMediaPlayer;
 
 import java.io.IOException;
 

@@ -49,7 +49,7 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
     protected boolean isBuffering;
     protected boolean isPlayerPrepared = false;
 
-    MuxStatsMediaPlayer(Context ctx, MediaPlayer player, String playerName,
+    public MuxStatsMediaPlayer(Context ctx, MediaPlayer player, String playerName,
                         CustomerPlayerData customerPlayerData,
                         CustomerVideoData customerVideoData) {
         super();
