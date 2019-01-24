@@ -3,7 +3,7 @@
     android:id="@+id/video_view_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?android:attr/colorForeground">
+    android:background="?android:attr/colorBackground">
 
     <SurfaceView
         android:id="@+id/video_view"
