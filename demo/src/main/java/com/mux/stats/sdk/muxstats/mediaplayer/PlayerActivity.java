@@ -61,12 +61,6 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
         player.setOnInfoListener(muxStats.getOnInfoListener(null));
         player.setOnSeekCompleteListener(muxStats.getOnSeekCompleteListener(null));
         player.setOnVideoSizeChangedListener(muxStats.getOnVideoSizeChangedListener(this));
-        try {
-            player.setDataSource(this, intent.getData());
-            player.prepareAsync();
-        } catch (IOException e) {
-            Log.e(TAG, "player unable to load uri " + e.toString());
-        }
     }
 
     @Override
@@ -115,6 +109,13 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
     public void surfaceCreated(SurfaceHolder holder) {
         if (player != null) {
             player.setDisplay(holder);
+            try {
+                Intent intent = getIntent();
+                player.setDataSource(this, intent.getData());
+                player.prepareAsync();
+            } catch (IOException e) {
+                Log.e(TAG, "player unable to load uri " + e.toString());
+            }
         }
     }
 
