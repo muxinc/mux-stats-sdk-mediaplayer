@@ -13,12 +13,10 @@ import com.mux.stats.sdk.core.events.EventBus;
 import com.mux.stats.sdk.core.events.IEvent;
 import com.mux.stats.sdk.core.events.InternalErrorEvent;
 import com.mux.stats.sdk.core.events.playback.EndedEvent;
-import com.mux.stats.sdk.core.events.playback.ErrorEvent;
 import com.mux.stats.sdk.core.events.playback.PauseEvent;
 import com.mux.stats.sdk.core.events.playback.PlayEvent;
 import com.mux.stats.sdk.core.events.playback.PlayingEvent;
-import com.mux.stats.sdk.core.events.playback.SeekedEvent;
-import com.mux.stats.sdk.core.events.playback.SeekingEvent;
+import com.mux.stats.sdk.core.events.playback.TimeUpdateEvent;
 import com.mux.stats.sdk.core.model.CustomerPlayerData;
 import com.mux.stats.sdk.core.model.CustomerVideoData;
 import com.mux.stats.sdk.core.util.MuxLogger;
@@ -90,8 +88,9 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
 
     @Override
     public long getCurrentPosition() {
-        if (isPlayerPrepared && player != null && player.get() != null)
+        if (isPlayerPrepared && player != null && player.get() != null) {
             return player.get().getCurrentPosition();
+        }
         return 0;
     }
 
@@ -235,7 +234,8 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
             onSeekCompleteListener.get().onSeekComplete(mp);
         }
 
-        dispatch(new SeekedEvent(null));
+        isBuffering = false;
+        dispatch(new TimeUpdateEvent(null));
         if (player.get().isPlaying()) {
             dispatch(new PlayingEvent(null));
         }
@@ -257,7 +257,7 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
     }
 
     public void seeking() {
-        dispatch(new SeekingEvent(null));
+        isBuffering = true;
     }
 
     public void release() {
