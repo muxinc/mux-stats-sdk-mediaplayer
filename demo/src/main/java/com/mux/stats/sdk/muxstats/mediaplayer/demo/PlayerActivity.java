@@ -65,8 +65,8 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
+    protected void onDestroy() {
+        super.onDestroy();
         releasePlayer();
 
         if (muxStats != null) {
