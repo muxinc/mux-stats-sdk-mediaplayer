@@ -24,7 +24,7 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
         SurfaceHolder.Callback, MediaPlayer.OnCompletionListener,
         MediaPlayer.OnVideoSizeChangedListener, MediaPlayer.OnErrorListener {
     private static final String TAG = "PlayerActivity";
-    private static final String MUX_ENVIRONMENT_KEY="84c4ps9d15i4ts1pqqgl1pbh4";
+    private static final String MUX_ENVIRONMENT_KEY="YourEnvironmentKey";
 
     public static final String VIDEO_TITLE_EXTRA = "video_title";
 
@@ -56,7 +56,7 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
         muxStats.setScreenSize(size.x, size.y);
         muxStats.setPlayerView(playerView);
 
-        player.setOnPreparedListener(this);
+        player.setOnPreparedListener(muxStats.getOnPreparedListener(this));
         player.setOnCompletionListener(muxStats.getOnCompletionListener(this));
         player.setOnErrorListener(muxStats.getOnErrorListener(this));
         player.setOnInfoListener(muxStats.getOnInfoListener(null));
@@ -92,7 +92,6 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
 
     @Override
     public void onPrepared(MediaPlayer mediaPlayer) {
-        muxStats.setIsPlayerPrepared(true);
         // Attach media player controls and display them.
         mediaController = new MediaController(this);
         mediaController.setMediaPlayer(new MediaPlayerControl());
@@ -203,8 +202,8 @@ public class PlayerActivity extends Activity implements MediaPlayer.OnPreparedLi
         @Override
         public void seekTo(int pos) {
             if (player != null) {
-                muxStats.seeking();
                 player.seekTo(pos);
+                muxStats.seeking();
             }
         }
 

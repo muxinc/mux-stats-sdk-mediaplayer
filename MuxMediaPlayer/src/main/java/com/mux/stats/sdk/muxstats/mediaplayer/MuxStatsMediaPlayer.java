@@ -28,8 +28,8 @@ import java.lang.ref.WeakReference;
 
 public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
         MediaPlayer.OnCompletionListener, MediaPlayer.OnErrorListener,
-        MediaPlayer.OnInfoListener, MediaPlayer.OnSeekCompleteListener,
-        MediaPlayer.OnVideoSizeChangedListener {
+        MediaPlayer.OnInfoListener, MediaPlayer.OnPreparedListener,
+        MediaPlayer.OnSeekCompleteListener, MediaPlayer.OnVideoSizeChangedListener {
     protected static final String TAG = "MuxStatsMediaPlayer";
 
     protected MuxStats muxStats;
@@ -39,6 +39,7 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
     protected WeakReference<MediaPlayer.OnCompletionListener> onCompletionListener;
     protected WeakReference<MediaPlayer.OnErrorListener> onErrorListener;
     protected WeakReference<MediaPlayer.OnInfoListener> onInfoListener;
+    protected WeakReference<MediaPlayer.OnPreparedListener> onPreparedListener;
     protected WeakReference<MediaPlayer.OnSeekCompleteListener> onSeekCompleteListener;
     protected WeakReference<MediaPlayer.OnVideoSizeChangedListener> onVideoSizeChangedListener;
 
@@ -58,6 +59,24 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
         addListener(muxStats);
     }
 
+    public void setPlayerView(View view) {
+        playerView = new WeakReference<>(view);
+    }
+
+    public void setScreenSize(int width, int height) {
+        muxStats.setScreenSize(width, height);
+    }
+
+    public void release() {
+        muxStats.release();
+        muxStats = null;
+        player = null;
+        playerView = null;
+    }
+
+    // Helper methods to wrap another listener for MediaPlayer events. This allows users of
+    // this class to chain it as a listener.
+
     public MediaPlayer.OnCompletionListener getOnCompletionListener (
             MediaPlayer.OnCompletionListener listener) {
         onCompletionListener = new WeakReference<>(listener);
@@ -74,6 +93,12 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
         return this;
     }
 
+    public MediaPlayer.OnPreparedListener getOnPreparedListener(
+            MediaPlayer.OnPreparedListener listener) {
+        onPreparedListener = new WeakReference<>(listener);
+        return this;
+    }
+
     public MediaPlayer.OnSeekCompleteListener getOnSeekCompleteListener(
             MediaPlayer.OnSeekCompleteListener listener) {
         onSeekCompleteListener = new WeakReference<>(listener);
@@ -86,6 +111,8 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
         return this;
     }
 
+
+    // IPlayerListener implementation
     @Override
     public long getCurrentPosition() {
         if (isPlayerPrepared && player != null && player.get() != null) {
@@ -136,10 +163,6 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
         return isBuffering;
     }
 
-    public void setPlayerView(View view) {
-        playerView = new WeakReference<>(view);
-    }
-
     @Override
     public int getPlayerViewWidth() {
         if (playerView != null && playerView.get() != null) {
@@ -156,6 +179,7 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
         return 0;
     }
 
+    // MediaPlayer.OnVideoSizeChangedListener implementation
     @Override
     public void onVideoSizeChanged(MediaPlayer mp, int width, int height) {
         if (onVideoSizeChangedListener != null && onVideoSizeChangedListener.get() != null) {
@@ -166,6 +190,7 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
         sourceHeight = height;
     }
 
+    // MediaPlayer.OnInfoListener implementation
     @Override
     public boolean onInfo(MediaPlayer mp, int what, int extra) {
         if (onInfoListener != null && onInfoListener.get() != null) {
@@ -185,6 +210,7 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
         return false;
     }
 
+    // MediaPlayer.OnCompletionListener implementation
     @Override
     public void onCompletion(MediaPlayer mp) {
         if (onCompletionListener != null && onCompletionListener.get() != null) {
@@ -194,6 +220,7 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
         dispatch(new EndedEvent(null));
     }
 
+    // MediaPlayer.OnError implementation
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
         // MediaPlayer is now in an error state, and it is invalid to call many of its methods.
@@ -228,6 +255,7 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
         return false;
     }
 
+    // MediaPlayer.OnSeekCompleteListener implementation
     @Override
     public void onSeekComplete(MediaPlayer mp) {
         if (onSeekCompleteListener != null && onSeekCompleteListener.get() != null) {
@@ -241,10 +269,19 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
         }
     }
 
-    public void setScreenSize(int width, int height) {
-        muxStats.setScreenSize(width, height);
+    // MediaPlayer.OnPreparedListener implementation
+    @Override
+    public void onPrepared(MediaPlayer mp) {
+        if (onPreparedListener != null && onPreparedListener.get() != null) {
+            onPreparedListener.get().onPrepared(mp);
+        }
+
+        isPlayerPrepared = true;
     }
 
+    /**
+     * Invoke this method just after {@link MediaPlayer#start()} is called.
+     */
     public void play() {
         dispatch(new PlayEvent(null));
         if (player.get().isPlaying()) {
@@ -252,20 +289,20 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
         }
     }
 
+    /**
+     * Invoke this method just after {@link MediaPlayer#pause()} is called.
+     */
     public void pause() {
         dispatch(new PauseEvent(null));
     }
 
+    /**
+     * Invoke this method just after {@link MediaPlayer#seekTo(int)} is called.
+     */
     public void seeking() {
         isBuffering = true;
     }
 
-    public void release() {
-        muxStats.release();
-        muxStats = null;
-        player = null;
-        playerView = null;
-    }
 
     /**
      * Should be set to true once {@link MediaPlayer#setDataSource} has been called. Should be

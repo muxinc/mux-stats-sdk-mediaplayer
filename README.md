@@ -23,6 +23,7 @@ Three options for getting the AAR:
 `MuxMediaPlayer` module. Find the AAR in
 `mux-stats-sdk-mediaplayer/MuxMediaPlayer/build/outputs/aar/MuxMediaPlayer-release.aar`
 3. Clone this repo and build the AAR on the command line
+
         ./gradlew :MuxMediaPlayer:assembleRelease
 
 ### 2. Import the AAR
@@ -49,7 +50,7 @@ CustomerVideoData customerVideoData = new CustomerVideoData();
 customerVideoData.setVideoTitle(intent.getStringExtra("YOUR VIDEO TITLE"));
 ```
 
-Create the `MuxStatsMediaPlayer` object by passing yuour Android
+Create the `MuxStatsMediaPlayer` object by passing your Android
 `Context` (typically your `Activity`), the `MediaPlayer` instance, a
 player name, and the customer data objects.
 ```java
@@ -68,16 +69,30 @@ muxStats.setScreenSize(size.x, size.y);
 ```
 
 In order to determine a number of viewer context values as well as track
- the size of the video player, set the player view.
- ```java
- muxStats.setPlayerView(playerView);
- ```
+the size of the video player, set the player view.
+```java
+muxStats.setPlayerView(playerView);
+```
 
- Finally, when you are destroying the player, call the
- `MuxStatsMediaPlayer.release()` method.
- ```java
- muxStats.release()
- ```
+To allow `MuxStatsMediaPlayer` to listen for various `MediaPlayer`
+events, add it as a listener. `MediaPlayer` only allows single
+listeners, so if your activity or application also needs to listen
+to these events, use the helper methods to wrap your listener
+implementation with `MuxStatsMediaPlayer`'s listener implementation.
+```java
+player.setOnCompletionListener(muxStats.getOnCompletionListener(myCompletionListener));
+player.setOnErrorListener(muxStats.getOnErrorListener(myErrorListener));
+player.setOnPreparedListener(muxStats.getOnPreparedListener(this));
+player.setOnInfoListener(muxStats.getOnInfoListener(null));  // No wrapped listener.
+player.setOnSeekCompleteListener(muxStats.getOnSeekCompleteListener(null));  // No wrapped listener.
+player.setOnVideoSizeChangedListener(muxStats.getOnVideoSizeChangedListener(myVideoSizeChangedListener));
+```
+
+Finally, when you are destroying the player, call the
+`MuxStatsMediaPlayer.release()` method.
+```java
+muxStats.release()
+```
 
 ### 4. Add additional MuxStatsMediaPlayer calls
 
