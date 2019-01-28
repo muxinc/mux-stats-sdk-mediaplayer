@@ -130,8 +130,8 @@ private class MediaPlayerControl implements MediaController.MediaPlayerControl,
     @Override
     public void seekTo(int pos) {
         if (player != null) {
-            muxStats.seeking();
             player.seekTo(pos);
+            muxStats.seeking();
         }
     }
 ```
