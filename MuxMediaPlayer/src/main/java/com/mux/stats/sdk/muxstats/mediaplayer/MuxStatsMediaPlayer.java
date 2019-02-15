@@ -10,7 +10,6 @@ import android.util.Log;
 import android.view.View;
 
 import com.mux.stats.sdk.core.events.EventBus;
-import com.mux.stats.sdk.core.events.IEvent;
 import com.mux.stats.sdk.core.events.InternalErrorEvent;
 import com.mux.stats.sdk.core.events.playback.EndedEvent;
 import com.mux.stats.sdk.core.events.playback.PauseEvent;
@@ -22,6 +21,7 @@ import com.mux.stats.sdk.core.model.CustomerVideoData;
 import com.mux.stats.sdk.core.util.MuxLogger;
 import com.mux.stats.sdk.muxstats.IDevice;
 import com.mux.stats.sdk.muxstats.IPlayerListener;
+import com.mux.stats.sdk.muxstats.MuxErrorException;
 import com.mux.stats.sdk.muxstats.MuxStats;
 
 import java.lang.ref.WeakReference;
@@ -59,12 +59,32 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
         addListener(muxStats);
     }
 
+    public void videoChange(CustomerVideoData customerVideoData) {
+        muxStats.videoChange(customerVideoData);
+    }
+
+    public void programChange(CustomerVideoData customerVideoData) {
+        muxStats.programChange(customerVideoData);
+    }
+
     public void setPlayerView(View view) {
         playerView = new WeakReference<>(view);
     }
 
+    public void setPlayerSize(int width, int height) {
+        muxStats.setPlayerSize(width, height);
+    }
+
     public void setScreenSize(int width, int height) {
         muxStats.setScreenSize(width, height);
+    }
+
+    public void error(MuxErrorException e) {
+        muxStats.error(e);
+    }
+
+    public void setAutomaticErrorTracking(boolean enabled) {
+        muxStats.setAutomaticErrorTracking(enabled);
     }
 
     public void release() {
