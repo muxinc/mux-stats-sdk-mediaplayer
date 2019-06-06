@@ -14,7 +14,7 @@
 #   public *;
 #}
 
--keep public class com.mux.stats.sdk.muxstats.MuxStatsMediaPlayer { public protected *; }
+-keep public class com.mux.stats.sdk.muxstats.mediaplayer.MuxStatsMediaPlayer { public protected *; }
 -keep public class com.mux.stats.sdk.muxstats.MuxErrorException { public protected *; }
 -keep public class com.mux.stats.sdk.core.model.CustomerPlayerData { public protected *; }
 -keep public class com.mux.stats.sdk.core.model.CustomerVideoData { public protected *; }
