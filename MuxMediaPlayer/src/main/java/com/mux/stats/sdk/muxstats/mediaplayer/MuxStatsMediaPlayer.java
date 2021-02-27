@@ -1,9 +1,17 @@
 package com.mux.stats.sdk.muxstats.mediaplayer;
 
+import static android.os.SystemClock.elapsedRealtime;
+
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.media.MediaFormat;
 import android.media.MediaPlayer;
+import android.media.MediaPlayer.TrackInfo;
+import android.net.ConnectivityManager;
+import android.net.NetworkCapabilities;
+import android.net.NetworkInfo;
 import android.os.Build;
 import android.provider.Settings;
 import android.util.Log;
@@ -23,6 +31,7 @@ import com.mux.stats.sdk.muxstats.IPlayerListener;
 import com.mux.stats.sdk.muxstats.MuxErrorException;
 import com.mux.stats.sdk.muxstats.MuxStats;
 import java.lang.ref.WeakReference;
+import java.util.UUID;
 
 public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
     MediaPlayer.OnCompletionListener, MediaPlayer.OnErrorListener,
@@ -46,6 +55,8 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
   protected Integer sourceHeight;
   protected boolean isBuffering;
   protected boolean isPlayerPrepared = false;
+  private int sourceAdvertisedFramerate;
+  private int sourceAdvertisedBitrate;
 
   public MuxStatsMediaPlayer(Context ctx, MediaPlayer player, String playerName,
       CustomerPlayerData customerPlayerData,
@@ -163,6 +174,16 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
   }
 
   @Override
+  public Integer getSourceAdvertisedBitrate() {
+    return this.sourceAdvertisedBitrate;
+  }
+
+  @Override
+  public Float getSourceAdvertisedFramerate() {
+    return new Float(this.sourceAdvertisedFramerate);
+  }
+
+  @Override
   public Long getSourceDuration() {
     if (isPlayerPrepared && player != null && player.get() != null) {
       return (long) player.get().getDuration();
@@ -172,9 +193,9 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
 
   @Override
   public boolean isPaused() {
-      if (isPlayerPrepared && player != null && player.get() != null) {
-          return !player.get().isPlaying();
-      }
+    if (isPlayerPrepared && player != null && player.get() != null) {
+      return !player.get().isPlaying();
+    }
     return false;
   }
 
@@ -208,6 +229,15 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
 
     sourceWidth = width;
     sourceHeight = height;
+
+    final TrackInfo videoTrackInfo = mp.getTrackInfo()[mp
+        .getSelectedTrack(TrackInfo.MEDIA_TRACK_TYPE_VIDEO)];
+    if (videoTrackInfo.getFormat().containsKey(MediaFormat.KEY_FRAME_RATE)) {
+      sourceAdvertisedFramerate = videoTrackInfo.getFormat().getInteger(MediaFormat.KEY_FRAME_RATE);
+    }
+    if (videoTrackInfo.getFormat().containsKey(MediaFormat.KEY_BIT_RATE)) {
+      sourceAdvertisedBitrate = videoTrackInfo.getFormat().getInteger(MediaFormat.KEY_BIT_RATE);
+    }
   }
 
   // MediaPlayer.OnInfoListener implementation
@@ -336,13 +366,31 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
 
     private static final String MEDIA_PLAYER_SOFTWARE = "MediaPlayer";
 
+    static final String CONNECTION_TYPE_CELLULAR = "cellular";
+    static final String CONNECTION_TYPE_WIFI = "wifi";
+    static final String CONNECTION_TYPE_WIRED = "wired";
+    static final String CONNECTION_TYPE_OTHER = "other";
+
+    static final String MUX_DEVICE_ID = "MUX_DEVICE_ID";
+
+    protected WeakReference<Context> contextRef;
     private String deviceId;
     private String appName = "";
     private String appVersion = "";
 
     MuxDevice(Context ctx) {
+      SharedPreferences sharedPreferences = ctx
+          .getSharedPreferences(MUX_DEVICE_ID, Context.MODE_PRIVATE);
+      deviceId = sharedPreferences.getString(MUX_DEVICE_ID, null);
+      if (deviceId == null) {
+        deviceId = UUID.randomUUID().toString();
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(MUX_DEVICE_ID, deviceId);
+        editor.commit();
+      }
       deviceId = Settings.Secure.getString(ctx.getContentResolver(),
           Settings.Secure.ANDROID_ID);
+      contextRef = new WeakReference<>(ctx);
       try {
         PackageInfo pi = ctx.getPackageManager().getPackageInfo(ctx.getPackageName(), 0);
         appName = pi.packageName;
@@ -410,6 +458,49 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
     @Override
     public String getPlayerSoftware() {
       return MEDIA_PLAYER_SOFTWARE;
+    }
+
+    @Override
+    public String getNetworkConnectionType() {
+      // Checking internet connectivity
+      Context context = contextRef.get();
+      if (context == null) {
+        return null;
+      }
+      final ConnectivityManager connectivityMgr = (ConnectivityManager) context
+          .getSystemService(Context.CONNECTIVITY_SERVICE);
+      if (connectivityMgr != null) {
+        final NetworkInfo activeNetwork = connectivityMgr.getActiveNetworkInfo();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+          final NetworkCapabilities nc = connectivityMgr
+              .getNetworkCapabilities(connectivityMgr.getActiveNetwork());
+          if (nc.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
+            return CONNECTION_TYPE_WIRED;
+          } else if (nc.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+            return CONNECTION_TYPE_WIFI;
+          } else if (nc.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+            return CONNECTION_TYPE_CELLULAR;
+          } else {
+            return CONNECTION_TYPE_OTHER;
+          }
+        } else {
+          if (activeNetwork.getType() == ConnectivityManager.TYPE_ETHERNET) {
+            return CONNECTION_TYPE_WIRED;
+          } else if (activeNetwork.getType() == ConnectivityManager.TYPE_WIFI) {
+            return CONNECTION_TYPE_WIFI;
+          } else if (activeNetwork.getType() == ConnectivityManager.TYPE_MOBILE) {
+            return CONNECTION_TYPE_CELLULAR;
+          } else {
+            return CONNECTION_TYPE_OTHER;
+          }
+        }
+      }
+      return null;
+    }
+
+    @Override
+    public long getElapsedRealtime() {
+      return elapsedRealtime();
     }
 
     @Override

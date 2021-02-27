@@ -1,2 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.mux.stats.sdk.muxstats.mediaplayer" />
+    package="com.mux.stats.sdk.muxstats.mediaplayer" >
+
+  <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+</manifest>
