@@ -12,4 +12,4 @@ Open this project in Android Studio, and let Gradle run to configure the applica
 
 ## Documentation
 
-See our [docs](https://docs.mux.com/v1/docs/mediaplayer-integration-guide) for more integration information.
+See our [docs](https://docs.mux.com/guides/data/monitor-android-media-player) for more integration information.
