@@ -43,15 +43,15 @@ dependencies {
 }
 
 afterEvaluate {
-    publishing {
-        publications {
-            // Note each publication needs to be mentioned in the _project_ build.gradle too
-            // Would be nice to not copy/paste all this - possible approach https://stackoverflow.com/a/66349023
-            isFatAarRelease(MavenPublication) {
-                from components.isFatAarRelease
-                groupId = "com.mux.stats.sdk.muxstats"
-                artifactId = "MuxMediaPlayer"
-                version = project.ext.versionName
+    android.libraryVariants.each { variant ->
+        String vName = variant.name.toLowerCase()
+        if (vName.contains("release") && vName.contains("isfataar")) {
+            println("--- Publishing variant "+variant.name)
+            publishing.publications.create(variant.name, MavenPublication) {
+                from components.findByName(variant.name)
+                groupId "com.mux.stats.sdk.muxstats"
+                artifactId "MuxMediaPlayer"
+                version project.ext.versionName
             }
         }
     }
