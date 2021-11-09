@@ -271,7 +271,6 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
             return true;
         } else if (what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) {
             hasStartedPlaying = true;
-//            dispatch(new PlayingEvent(null));
             return true;
         }
         return false;
