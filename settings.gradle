@@ -1,1 +1,1 @@
-include ':demo', ':MuxMediaPlayer', ":automatedtests"
+include ':MuxMediaPlayer', ":automatedtests"

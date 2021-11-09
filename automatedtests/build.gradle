@@ -34,12 +34,11 @@ android {
     }
 }
 
+apply from: '../fataar_flavor.gradle', to: android
+
 dependencies {
-    if(project.ext.inLocalDevMode) {
-        implementation project(':MuxMediaPlayer')
-    } else {
-        api 'com.mux.stats.sdk.muxstats:MuxMediaPlayer:'+project.ext.versionName
-    }
+    notFatAarImplementation project(':MuxMediaPlayer')
+    isFatAarApi 'com.mux.stats.sdk.muxstats:MuxMediaPlayer:'+project.ext.versionName
 
     implementation 'androidx.test.ext:junit:1.1.3'
     implementation 'androidx.appcompat:appcompat:1.2.0'
