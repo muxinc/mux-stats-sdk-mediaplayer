@@ -17,12 +17,3 @@ productFlavors {
         dimension "fatAarLibrary"
     }
 }
-
-if(System.getenv("BUILDKITE").equals("true")) {
-    // Ignore non fat aar builds on buildkite
-    variantFilter { variant ->
-        if (!variant.name.contains("isFatAar")) {
-            setIgnore(true)
-        }
-    }
-}
