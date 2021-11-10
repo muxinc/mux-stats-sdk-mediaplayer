@@ -21,8 +21,8 @@ productFlavors {
 if(System.getenv("BUILDKITE").equals("true")) {
     // Ignore non fat aar builds on buildkite
     variantFilter { variant ->
-        def names = variant.flavors*.name
-        if (names.contains("notFatAar")) {
+        if (!variant.name.contains("isFatAar")) {
+            println("Ignoring "+variant.name)
             setIgnore(true)
         }
     }
