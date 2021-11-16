@@ -23,6 +23,7 @@ allprojects {
     }
 
     project.ext {
+        artifactId = "MuxMediaPlayer"
         compileSdkVersion = 29
         minSdkVersion = 18
         targetSdkVersion = 29
@@ -33,4 +34,4 @@ task clean(type: Delete) {
     delete rootProject.buildDir
 }
 
-apply from: 'publishing.gradle'
+apply from: 'MuxAndroidSDKPublishing/publishing.gradle'

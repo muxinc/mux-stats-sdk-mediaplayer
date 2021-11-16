@@ -6,7 +6,7 @@ afterEvaluate {
             publishing.publications.create(variant.name, MavenPublication) {
                 from components.findByName(variant.name)
                 groupId "com.mux.stats.sdk.muxstats"
-                artifactId "MuxMediaPlayer"
+                artifactId project.ext.artifactId
                 version project.ext.versionName
             }
         }

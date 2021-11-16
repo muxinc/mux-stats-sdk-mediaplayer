@@ -32,7 +32,7 @@ android {
     }
 }
 
-apply from: '../fataar_flavor.gradle', to: android
+apply from: '../MuxAndroidSDKPublishing/fataar_flavor.gradle', to: android
 
 dependencies {
     implementation 'com.android.support:appcompat-v7:28.0.0'
@@ -42,4 +42,4 @@ dependencies {
     notFatAarApi muxCoreImport
 }
 
-apply from: '../declare_publication.gradle'
+apply from: '../MuxAndroidSDKPublishing/declare_publication.gradle'

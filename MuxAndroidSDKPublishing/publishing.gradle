@@ -17,7 +17,7 @@ if (propertiesFile.exists()) {
     artifactoryPassword = properties.getProperty('artifactory_password')
 }
 
-apply from: 'git_utils.gradle', to: ext
+apply from: 'MuxAndroidSDKPublishing/git_utils.gradle', to: ext
 
 def gitHash = getGitHash()
 def gitBranch = getGitBranch()
@@ -74,6 +74,7 @@ artifactory {
 
             // Need to list all the different variants here and in the deploy section below
             publications ('isFatAarRelease')
+            // TODO generate that above set programatically
         }
     }
     resolve {
@@ -85,6 +86,15 @@ artifactory {
         }
     }
 }
+
+//afterEvaluate {
+//    android.libraryVariants.each { variant ->
+//        String vName = variant.name.toLowerCase()
+//        if (vName.contains("release") && vName.contains("isfataar")) {
+//            println("--- Should try adding the publication programatically "+variant.name)
+//        }
+//    }
+//}
 
 def deployVariant(String versionName) {
     println("Deploying "+versionName)

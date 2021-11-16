@@ -9,11 +9,10 @@ steps:
         upload:
           - "MuxMediaPlayer/build/outputs/aar/*.aar"
           - "MuxMediaPlayer/build/outputs/logs/*.txt"
-          - "automatedtests/build/outputs/apk/*/*.apk"
-          - "automatedtests/build/outputs/apk/*/*/*.apk"
+          - "automatedtests/build/outputs/apk/**/*.apk"
 - wait
 - agents: [dind=true,queue=beta]
-  command: docker run --rm -v $(pwd):/data -e BUILD_LABEL="$SAUCECTL_LABEL" -e TEST_APK=/data/automatedtests/build/outputs/apk/androidTest/debug/automatedtests-debug-androidTest.apk -e APP_APK=/data/automatedtests/build/outputs/apk/debug/automatedtests-debug.apk -e TEST_DEVICES='Google Pixel[ 345]*' -e SAUCE_USERNAME='mux-sauce' -e SAUCE_ACCESS_KEY=$SAUCE_ACCESS_KEY muxinc/saucectl-runner:0.73.1
+  command: docker run --rm -v $(pwd):/data -e BUILD_LABEL="$SAUCECTL_LABEL" -e TEST_APK=/data/automatedtests/build/outputs/apk/androidTest/isFatAar/debug/automatedtests-isFatAar-debug-androidTest.apk -e APP_APK=/data/automatedtests/build/outputs/apk/isFatAar/debug/automatedtests-isFatAar-debug.apk -e TEST_DEVICES='Google Pixel[ 345]*' -e SAUCE_USERNAME='mux-sauce' -e SAUCE_ACCESS_KEY=$SAUCE_ACCESS_KEY muxinc/saucectl-runner:0.73.1
   label: Test the Android Mux Stats MediaPlayer SDK
   retry:
     automatic:
@@ -22,8 +21,8 @@ steps:
   plugins:
     - artifacts#v1.3.0:
         download:
-          - "automatedtests/build/outputs/apk/debug/automatedtests-debug.apk"
-          - "automatedtests/build/outputs/apk/androidTest/debug/automatedtests-debug-androidTest.apk"
+          - "automatedtests/build/outputs/apk/isFatAar/debug/automatedtests-isFatAar-debug.apk"
+          - "automatedtests/build/outputs/apk/androidTest/isFatAar/debug/automatedtests-isFatAar-debug-androidTest.apk"
 - wait
 - block: ":rocket: Deploy and release!"
   blocked_state: failed

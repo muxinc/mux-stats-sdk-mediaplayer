@@ -1,6 +1,6 @@
 // This is designed to be applied to the android block
 // e.g:
-// apply from: '../fataar_flavor.gradle', to: android
+// apply from: 'MuxAndroidSDKPublishing/fataar_flavor.gradle', to: android
 
 // This is due to the problem with fat aar bundling
 // See item #1 https://github.com/kezong/fat-aar-android#known-defects-or-issues
