@@ -9,6 +9,8 @@ afterEvaluate {
                 artifactId project.ext.artifactId
                 version project.ext.versionName
             }
+
+            println(project.rootProject.addPublication(variant.name))
         }
     }
 }

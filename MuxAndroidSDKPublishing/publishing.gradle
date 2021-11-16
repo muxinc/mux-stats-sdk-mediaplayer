@@ -72,11 +72,6 @@ artifactory {
 
         defaults {
             publications ('mavenJava')
-
-            project.ext.publications.each { p ->
-                println("-- Adding publication "+p)
-                publications(p)
-            }
         }
     }
 
@@ -88,6 +83,22 @@ artifactory {
             maven = true
         }
     }
+}
+
+project.ext.publishedVariants = []
+
+// Callback for the projects (in declare_publication.gradle)
+project.ext.addPublication = { name ->
+    println("-- Adding publication "+name)
+    artifactory {
+        publish {
+            defaults {
+                publications (name)
+            }
+        }
+    }
+
+    project.ext.publishedVariants.add(name)
 }
 
 def deployVariant(String versionName) {
@@ -106,7 +117,7 @@ task muxReleaseDeploy {
         if(isAReleaseBuild) {
             println("Deploying from local maven to release maven")
 
-            project.ext.publications.each { p ->
+            project.ext.publishedVariants.each { p ->
                 deployVariant(p)
             }
 

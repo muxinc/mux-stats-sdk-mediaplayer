@@ -28,9 +28,6 @@ allprojects {
         compileSdkVersion = 29
         minSdkVersion = 18
         targetSdkVersion = 29
-
-        // Need to list all the different variants here that should be published
-        publications = ["isFatAarRelease"]
     }
 }
 
