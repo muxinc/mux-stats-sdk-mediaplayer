@@ -69,14 +69,16 @@ artifactory {
             password = artifactoryPassword
             maven = true
         }
+
         defaults {
             publications ('mavenJava')
 
-            // Need to list all the different variants here and in the deploy section below
-            publications ('isFatAarRelease')
-            // TODO generate that above set programatically
+            project.ext.publications.each { p ->
+                publications(p)
+            }
         }
     }
+
     resolve {
         repository {
             repoKey = 'default-maven-local'
@@ -87,20 +89,11 @@ artifactory {
     }
 }
 
-//afterEvaluate {
-//    android.libraryVariants.each { variant ->
-//        String vName = variant.name.toLowerCase()
-//        if (vName.contains("release") && vName.contains("isfataar")) {
-//            println("--- Should try adding the publication programatically "+variant.name)
-//        }
-//    }
-//}
-
 def deployVariant(String versionName) {
     println("Deploying "+versionName)
     def stdout = new ByteArrayOutputStream()
     exec {
-        commandLine 'curl', '-u', "${artifactory_user}:${artifactory_password}", '-X', "POST", "https://muxinc.jfrog.io/artifactory/api/copy/default-maven-local/com/mux/stats/sdk/muxstats/MuxKalturaSDK/" + versionName + "?to=/default-maven-release-local/com/mux/stats/sdk/muxstats/MuxKalturaSDK/" + versionName
+        commandLine 'curl', '-u', "${artifactory_user}:${artifactory_password}", '-X', "POST", "https://muxinc.jfrog.io/artifactory/api/copy/default-maven-local/com/mux/stats/sdk/muxstats/"+project.ext.artifactId+"/" + versionName + "?to=/default-maven-release-local/com/mux/stats/sdk/muxstats/"+project.ext.artifactId+"/" + versionName
         standardOutput = stdout
     }
     def msg = stdout.toString()
@@ -112,7 +105,9 @@ task muxReleaseDeploy {
         if(isAReleaseBuild) {
             println("Deploying from local maven to release maven")
 
-            deployVariant(packageVersionName)
+            project.ext.publications.each { p ->
+                deployVariant(p)
+            }
 
             println("Release deployment complete")
         } else {
