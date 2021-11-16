@@ -74,6 +74,7 @@ artifactory {
             publications ('mavenJava')
 
             project.ext.publications.each { p ->
+                println("-- Adding publication "+p)
                 publications(p)
             }
         }

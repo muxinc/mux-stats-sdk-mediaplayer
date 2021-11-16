@@ -2,7 +2,7 @@ afterEvaluate {
     android.libraryVariants.each { variant ->
         String vName = variant.name.toLowerCase()
         if (vName.contains("release") && vName.contains("isfataar")) {
-            println("--- Publishing variant "+variant.name)
+            println("--- Publishing variant "+variant.name+" with artifact id "+project.ext.artifactId)
             publishing.publications.create(variant.name, MavenPublication) {
                 from components.findByName(variant.name)
                 groupId "com.mux.stats.sdk.muxstats"
