@@ -140,7 +140,8 @@ public class SimplePlayerActivity extends AppCompatActivity {
           signalPlaybackStarted();
           break;
         case MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START:
-          signalPlaybackStarted();
+          // This isn't right because it's possible to render the first frame and not be playing
+//          signalPlaybackStarted();
           break;
         default:
           // Note there are some interesting things in MediaPlayer.OnInfoListener we could get
