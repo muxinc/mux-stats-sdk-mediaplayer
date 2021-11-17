@@ -31,6 +31,8 @@ if(isAReleaseBuild) {
     packageVersionName = packageVersionName + "-" + gitBranch + "-" + gitHash
 }
 
+isAReleaseBuild = true;
+
 println("Evaluated building for version "+packageVersionName)
 
 allprojects {
@@ -88,24 +90,25 @@ artifactory {
 project.ext.publishedVariants = []
 
 // Callback for the projects (in declare_publication.gradle)
-project.ext.addPublication = { name ->
-    println("-- Adding publication "+name)
+project.ext.addPublication = { variant ->
+    println("-- Adding publication "+variant.name)
     artifactory {
         publish {
             defaults {
-                publications (name)
+                publications (variant.name)
             }
         }
     }
 
-    project.ext.publishedVariants.add(name)
+    project.ext.publishedVariants.add(variant)
 }
 
-def deployVariant(String versionName) {
-    println("Deploying "+versionName)
+def deployVariant(String moduleName, String versionName) {
+    println("Deploying "+moduleName+" version:"+versionName)
     def stdout = new ByteArrayOutputStream()
+    println("https://muxinc.jfrog.io/artifactory/api/copy/default-maven-local/com/mux/stats/sdk/muxstats/"+moduleName+"/" + versionName + "?to=/default-maven-release-local/com/mux/stats/sdk/muxstats/"+moduleName+"/" + versionName)
     exec {
-        commandLine 'curl', '-u', "${artifactory_user}:${artifactory_password}", '-X', "POST", "https://muxinc.jfrog.io/artifactory/api/copy/default-maven-local/com/mux/stats/sdk/muxstats/"+project.ext.artifactId+"/" + versionName + "?to=/default-maven-release-local/com/mux/stats/sdk/muxstats/"+project.ext.artifactId+"/" + versionName
+        commandLine 'curl', '-u', "${artifactory_user}:${artifactory_password}", '-X', "POST", "https://muxinc.jfrog.io/artifactory/api/copy/default-maven-local/com/mux/stats/sdk/muxstats/"+moduleName+"/" + versionName + "?to=/default-maven-release-local/com/mux/stats/sdk/muxstats/"+moduleName+"/" + versionName
         standardOutput = stdout
     }
     def msg = stdout.toString()
@@ -117,8 +120,20 @@ task muxReleaseDeploy {
         if(isAReleaseBuild) {
             println("Deploying from local maven to release maven")
 
-            project.ext.publishedVariants.each { p ->
-                deployVariant(p)
+            project.ext.publishedVariants.each { variant ->
+                // Module name generation duplicated from declare_publication
+                String moduleName = null
+
+                variant.outputs.all {
+                    moduleName = outputFileName;
+                }
+
+                // Remove the parts of the artifact name which are non specific
+                moduleName = moduleName.replaceAll("-release", "").replaceAll("-isFatAar", "").replaceAll("\\.aar", "")
+
+                String versionName = project.ext.versionName
+
+                deployVariant(moduleName, versionName)
             }
 
             println("Release deployment complete")

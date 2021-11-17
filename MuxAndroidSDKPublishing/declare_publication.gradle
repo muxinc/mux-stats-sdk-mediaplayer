@@ -1,27 +1,27 @@
 afterEvaluate {
     android.libraryVariants.each { variant ->
         String vName = variant.name.toLowerCase()
-        String artifactName = null
+        String moduleName = null
 
         if (vName.contains("release") && vName.contains("isfataar")) {
-            println("--- Publishing variant "+variant.name)
+            println("--- Publishing variant "+variant.name+" version "+project.ext.versionName)
 
             variant.outputs.all {
-                artifactName = outputFileName;
+                moduleName = outputFileName;
             }
 
             // Remove the parts of the artifact name which are non specific
-            artifactName = artifactName.replaceAll("-release", "").replaceAll("-isFatAar", "").replaceAll("\\.aar", "")
-            println("    artifactId "+artifactName)
+            moduleName = moduleName.replaceAll("-release", "").replaceAll("-isFatAar", "").replaceAll("\\.aar", "")
+            println("    artifactId "+moduleName)
 
             publishing.publications.create(variant.name, MavenPublication) {
                 from components.findByName(variant.name)
                 groupId "com.mux.stats.sdk.muxstats"
-                artifactId artifactName
+                artifactId moduleName
                 version project.ext.versionName
             }
 
-            project.rootProject.addPublication(variant.name)
+            project.rootProject.addPublication(variant)
         }
     }
 }
