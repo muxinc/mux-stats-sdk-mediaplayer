@@ -24,7 +24,6 @@ allprojects {
 
     // This block is used by the publishing scripts
     project.ext {
-        artifactId = "MuxMediaPlayer"
         compileSdkVersion = 29
         minSdkVersion = 18
         targetSdkVersion = 29
