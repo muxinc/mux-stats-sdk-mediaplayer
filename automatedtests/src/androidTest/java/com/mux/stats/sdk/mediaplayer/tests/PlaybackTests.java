@@ -139,11 +139,16 @@ public class PlaybackTests extends TestBase {
   @Test
   public void testVodPlayback() {
     try {
+      testActivity.waitForActivityToInitialize();
+
+      long timeStartedWaiting = System.currentTimeMillis();
       if (!testActivity.waitForPlaybackToStart(waitForPlaybackToStartInMS)) {
         fail("Playback did not start in " + waitForPlaybackToStartInMS + " milliseconds !!!");
       }
+      long timeFinishedWaiting = System.currentTimeMillis();
+      long playbackWaitDelay = timeFinishedWaiting - timeStartedWaiting;
 
-      Thread.sleep(PLAY_PERIOD_IN_MS);
+      Thread.sleep(PLAY_PERIOD_IN_MS - playbackWaitDelay);
       pausePlayer();
       Thread.sleep(PAUSE_PERIOD_IN_MS);
       resumePlayer();

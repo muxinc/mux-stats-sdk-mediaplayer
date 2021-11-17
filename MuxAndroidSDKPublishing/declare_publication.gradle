@@ -10,6 +10,7 @@ afterEvaluate {
                 artifactName = outputFileName;
             }
 
+            // Remove the parts of the artifact name which are non specific
             artifactName = artifactName.replaceAll("-release", "").replaceAll("-isFatAar", "").replaceAll("\\.aar", "")
             println("    artifactId "+artifactName)
 
