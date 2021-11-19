@@ -7,7 +7,8 @@
 //
 // When doing local development it is easiest to use the "notFatAar" flavors
 // Only the fat aar flavors are published
-flavorDimensions "fatAarLibrary"
+flavorDimensions.add("fatAarLibrary")
+
 productFlavors {
     notFatAar {
         dimension "fatAarLibrary"

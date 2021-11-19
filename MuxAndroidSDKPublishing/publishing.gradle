@@ -90,15 +90,27 @@ project.ext.publishedVariants = []
 // Callback for the projects (in declare_publication.gradle)
 project.ext.addPublication = { variant ->
     println("-- Adding publication "+variant.name)
+
+    project.ext.publishedVariants.add(variant)
+}
+
+project.ext.createPublications = {
+    println("-- Creating batch of publications")
+    def closedVars = project.ext.publishedVariants
+
+    println("   Publications size: "+closedVars.size())
+
     artifactory {
         publish {
             defaults {
-                publications (variant.name)
+                publications ('mavenJava')
+                closedVars.each { variant ->
+                    println("-- Creating publication of "+variant.name)
+                    publications (variant.name)
+                }
             }
         }
     }
-
-    project.ext.publishedVariants.add(variant)
 }
 
 def deployVariant(String moduleName, String versionName) {
@@ -127,7 +139,7 @@ task muxReleaseDeploy {
                 }
 
                 // Remove the parts of the artifact name which are non specific
-                moduleName = moduleName.replaceAll("-release", "").replaceAll("-isFatAar", "").replaceAll("\\.aar", "")
+                moduleName = moduleName.replaceAll("-release", "").replaceAll("-isFatAar", "").replaceAll("\\-", "_").replaceAll("\\.aar", "")
 
                 String versionName = project.ext.versionName
 

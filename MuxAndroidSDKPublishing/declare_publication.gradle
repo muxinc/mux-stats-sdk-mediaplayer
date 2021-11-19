@@ -3,7 +3,9 @@ afterEvaluate {
         String vName = variant.name.toLowerCase()
         String moduleName = null
 
-        if (vName.contains("release") && vName.contains("isfataar")) {
+        // Multi flavour builds (like isFatAar + exoplayer version) break fat aar
+        // As a result those do not have a variant for isFatAar
+        if (vName.contains("release") && !vName.contains("_ads")) {
             println("--- Publishing variant "+variant.name+" version "+project.ext.versionName)
 
             variant.outputs.all {
@@ -11,7 +13,7 @@ afterEvaluate {
             }
 
             // Remove the parts of the artifact name which are non specific
-            moduleName = moduleName.replaceAll("-release", "").replaceAll("-isFatAar", "").replaceAll("\\.aar", "")
+            moduleName = moduleName.replaceAll("-release", "").replaceAll("-isFatAar", "").replaceAll("\\-", "_").replaceAll("\\.aar", "")
             println("    artifactId "+moduleName)
 
             publishing.publications.create(variant.name, MavenPublication) {
@@ -21,7 +23,11 @@ afterEvaluate {
                 version project.ext.versionName
             }
 
+            println("Publishing publications size "+publishing.publications.size())
+
             project.rootProject.addPublication(variant)
         }
     }
+
+    project.rootProject.createPublications()
 }
