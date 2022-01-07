@@ -7,11 +7,8 @@ buildscript {
         jcenter()
     }
     dependencies {
+        classpath 'com.github.kezong:fat-aar:1.3.6'
         classpath 'com.android.tools.build:gradle:7.0.4'
-        
-
-        // NOTE: Do not place your application dependencies here; they belong
-        // in the individual module build.gradle files
     }
 }
 
@@ -19,6 +16,14 @@ allprojects {
     repositories {
         google()
         jcenter()
+
+        // Mux Repos
+        maven { url 'https://muxinc.jfrog.io/artifactory/default-maven-release-local' }
+        maven { url 'https://muxinc.jfrog.io/artifactory/default-maven-local' }
+
+        project.ext {
+            muxCoreVersion = "7.0.7"
+        }
     }
 }
 
