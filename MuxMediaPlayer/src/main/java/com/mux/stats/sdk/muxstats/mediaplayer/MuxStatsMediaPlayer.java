@@ -20,11 +20,17 @@ import com.mux.stats.sdk.core.events.playback.EndedEvent;
 import com.mux.stats.sdk.core.events.playback.PauseEvent;
 import com.mux.stats.sdk.core.events.playback.PlayEvent;
 import com.mux.stats.sdk.core.events.playback.PlayingEvent;
+import com.mux.stats.sdk.core.events.playback.RebufferEndEvent;
+import com.mux.stats.sdk.core.events.playback.RebufferStartEvent;
+import com.mux.stats.sdk.core.events.playback.RenditionChangeEvent;
+import com.mux.stats.sdk.core.events.playback.SeekedEvent;
+import com.mux.stats.sdk.core.events.playback.SeekingEvent;
 import com.mux.stats.sdk.core.events.playback.TimeUpdateEvent;
 import com.mux.stats.sdk.core.model.CustomerPlayerData;
 import com.mux.stats.sdk.core.model.CustomerVideoData;
 import com.mux.stats.sdk.core.util.MuxLogger;
 import com.mux.stats.sdk.muxstats.IDevice;
+import com.mux.stats.sdk.muxstats.INetworkRequest;
 import com.mux.stats.sdk.muxstats.IPlayerListener;
 import com.mux.stats.sdk.muxstats.LogPriority;
 import com.mux.stats.sdk.muxstats.MuxErrorException;
@@ -50,18 +56,29 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
     protected WeakReference<MediaPlayer.OnSeekCompleteListener> onSeekCompleteListener;
     protected WeakReference<MediaPlayer.OnVideoSizeChangedListener> onVideoSizeChangedListener;
 
-    protected Integer sourceWidth;
-    protected Integer sourceHeight;
+    protected int sourceWidth;
+    protected int sourceHeight;
+    private boolean isSeeking;
+    private boolean isPaused;
     protected boolean isBuffering;
+    private boolean isRebuffering;
     protected boolean isPlayerPrepared = false;
+    private boolean hasStartedPlaying;
+
+    public MuxStatsMediaPlayer(Context ctx, MediaPlayer player, String playerName,
+        CustomerPlayerData customerPlayerData,
+        CustomerVideoData customerVideoData) {
+        this(ctx, player, playerName, customerPlayerData, customerVideoData, new MuxNetworkRequests());
+    }
 
     public MuxStatsMediaPlayer(Context ctx, MediaPlayer player, String playerName,
                         CustomerPlayerData customerPlayerData,
-                        CustomerVideoData customerVideoData) {
+                        CustomerVideoData customerVideoData,
+                        INetworkRequest network) {
         super();
         this.player = new WeakReference<>(player);
         MuxStats.setHostDevice(new MuxDevice(ctx));
-        MuxStats.setHostNetworkApi(new MuxNetworkRequest());
+        MuxStats.setHostNetworkApi(network);
         muxStats = new MuxStats(this, playerName, customerPlayerData, customerVideoData);
         addListener(muxStats);
     }
@@ -196,10 +213,6 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
         return null;
     }
 
-    /**
-     * This method is not supported for AMP
-     * @return always null
-     */
     @Override
     public Long getSourceDuration() {
         if (isPlayerPrepared && player != null && player.get() != null) {
@@ -313,8 +326,14 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
             onVideoSizeChangedListener.get().onVideoSizeChanged(mp, width, height);
         }
 
+        boolean changed = sourceWidth != width && sourceHeight != height;
+
         sourceWidth = width;
         sourceHeight = height;
+
+        if(changed) {
+            dispatch(new RenditionChangeEvent(null));
+        }
     }
 
     // MediaPlayer.OnInfoListener implementation
@@ -326,12 +345,24 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
 
         if (what == MediaPlayer.MEDIA_INFO_BUFFERING_START) {
             isBuffering = true;
+            if(!isSeeking && hasStartedPlaying) {
+                isRebuffering = true;
+                dispatch(new RebufferStartEvent(null));
+            }
             return true;
         } else if (what == MediaPlayer.MEDIA_INFO_BUFFERING_END) {
             isBuffering = false;
+            if(isRebuffering) {
+                isRebuffering = false;
+                dispatch(new RebufferEndEvent(null));
+                if(mp.isPlaying()) {
+                    isPaused = false;
+                    dispatch(new PlayingEvent(null));
+                }
+            }
             return true;
         } else if (what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) {
-            dispatch(new PlayingEvent(null));
+            hasStartedPlaying = true;
             return true;
         }
         return false;
@@ -344,6 +375,9 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
             onCompletionListener.get().onCompletion(mp);
         }
 
+        if(!isPaused) {
+            dispatch(new PauseEvent(null));
+        }
         dispatch(new EndedEvent(null));
     }
 
@@ -385,13 +419,17 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
     // MediaPlayer.OnSeekCompleteListener implementation
     @Override
     public void onSeekComplete(MediaPlayer mp) {
+        isSeeking = false;
+
         if (onSeekCompleteListener != null && onSeekCompleteListener.get() != null) {
             onSeekCompleteListener.get().onSeekComplete(mp);
         }
 
         isBuffering = false;
+        dispatch(new SeekedEvent(null));
         dispatch(new TimeUpdateEvent(null));
         if (player.get().isPlaying()) {
+            isPaused = false;
             dispatch(new PlayingEvent(null));
         }
     }
@@ -410,6 +448,7 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
      * Invoke this method just after {@link MediaPlayer#start()} is called.
      */
     public void play() {
+        isPaused = false;
         dispatch(new PlayEvent(null));
         if (player.get().isPlaying()) {
             dispatch(new PlayingEvent(null));
@@ -420,14 +459,29 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
      * Invoke this method just after {@link MediaPlayer#pause()} is called.
      */
     public void pause() {
-        dispatch(new PauseEvent(null));
+        if(!isPaused) {
+            isPaused = true;
+            dispatch(new PauseEvent(null));
+        }
     }
 
     /**
      * Invoke this method just after {@link MediaPlayer#seekTo(int)} is called.
      */
     public void seeking() {
+        isSeeking = true;
         isBuffering = true;
+
+        if(!hasStartedPlaying) {
+            dispatch(new PlayEvent(null));
+        }
+
+        if(!isPaused) {
+            isPaused = true;
+            dispatch(new PauseEvent(null));
+        }
+
+        dispatch(new SeekingEvent(null));
     }
 
 
