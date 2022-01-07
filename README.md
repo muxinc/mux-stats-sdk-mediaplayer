@@ -4,7 +4,7 @@ This is the Mux wrapper around Android MediaPlayer, built on top of Mux's core J
 
 ## Releases
 
-Full builds are provided as releases within the repo as versions are released.
+Full builds are provided as releases within the repo as versions are released and on the Mux Maven repository.
 
 ## Developer Quick Start
 
