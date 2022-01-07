@@ -248,7 +248,7 @@ public class MuxNetworkRequest implements INetworkRequest {
     }
 
     @Override
-    public void postWithCompletion(String propertyKey, String body,
+    public void postWithCompletion(String domain, String propertyKey, String body,
                                    Hashtable<String, String> headers,
                                    INetworkRequest.IMuxNetworkRequestsCompletion callback) {
         try {

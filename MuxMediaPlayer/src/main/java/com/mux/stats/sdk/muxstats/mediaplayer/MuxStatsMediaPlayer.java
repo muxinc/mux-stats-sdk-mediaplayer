@@ -4,11 +4,16 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
+import android.net.ConnectivityManager;
+import android.net.NetworkCapabilities;
+import android.net.NetworkInfo;
 import android.os.Build;
+import android.os.SystemClock;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 
+import com.mux.stats.sdk.core.MuxSDKViewOrientation;
 import com.mux.stats.sdk.core.events.EventBus;
 import com.mux.stats.sdk.core.events.InternalErrorEvent;
 import com.mux.stats.sdk.core.events.playback.EndedEvent;
@@ -21,7 +26,9 @@ import com.mux.stats.sdk.core.model.CustomerVideoData;
 import com.mux.stats.sdk.core.util.MuxLogger;
 import com.mux.stats.sdk.muxstats.IDevice;
 import com.mux.stats.sdk.muxstats.IPlayerListener;
+import com.mux.stats.sdk.muxstats.LogPriority;
 import com.mux.stats.sdk.muxstats.MuxErrorException;
+import com.mux.stats.sdk.muxstats.MuxSDKViewPresentation;
 import com.mux.stats.sdk.muxstats.MuxStats;
 
 import java.lang.ref.WeakReference;
@@ -57,6 +64,14 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
         MuxStats.setHostNetworkApi(new MuxNetworkRequest());
         muxStats = new MuxStats(this, playerName, customerPlayerData, customerVideoData);
         addListener(muxStats);
+    }
+
+    public void orientationChange(MuxSDKViewOrientation orientation) {
+        muxStats.orientationChange(orientation);
+    }
+
+    public void presentationChange(MuxSDKViewPresentation presentation) {
+        muxStats.presentationChange(presentation);
     }
 
     public void videoChange(CustomerVideoData customerVideoData) {
@@ -163,6 +178,28 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
         return sourceHeight;
     }
 
+    /**
+     * This method is not supported for AMP
+     * @return always null
+     */
+    @Override
+    public Integer getSourceAdvertisedBitrate() {
+        return null;
+    }
+
+    /**
+     * This method is not supported for AMP
+     * @return always null
+     */
+    @Override
+    public Float getSourceAdvertisedFramerate() {
+        return null;
+    }
+
+    /**
+     * This method is not supported for AMP
+     * @return always null
+     */
     @Override
     public Long getSourceDuration() {
         if (isPlayerPrepared && player != null && player.get() != null) {
@@ -171,6 +208,10 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
         return null;
     }
 
+    /**
+     * This method is not supported for AMP
+     * @return always null
+     */
     @Override
     public boolean isPaused() {
         if (isPlayerPrepared && player != null && player.get() != null)
@@ -178,11 +219,19 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
         return false;
     }
 
+    /**
+     * This method is not supported for AMP
+     * @return always null
+     */
     @Override
     public boolean isBuffering() {
         return isBuffering;
     }
 
+    /**
+     * This method is not supported for AMP
+     * @return always null
+     */
     @Override
     public int getPlayerViewWidth() {
         if (playerView != null && playerView.get() != null) {
@@ -191,12 +240,70 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
         return 0;
     }
 
+    /**
+     * This method is not supported for AMP
+     * @return always null
+     */
     @Override
     public int getPlayerViewHeight() {
         if (playerView != null && playerView.get() != null) {
             return playerView.get().getHeight();
         }
         return 0;
+    }
+
+    /**
+     * This method is not supported for AMP
+     * @return always null
+     */
+    @Override
+    public Long getPlayerProgramTime() {
+        return null;
+    }
+
+    /**
+     * This method is not supported for AMP
+     * @return always null
+     */
+    @Override
+    public Long getPlayerManifestNewestTime() {
+        return null;
+    }
+
+    /**
+     * This method is not supported for AMP
+     * @return always null
+     */
+    @Override
+    public Long getVideoHoldback() {
+        return null;
+    }
+
+    /**
+     * This method is not supported for AMP
+     * @return always null
+     */
+    @Override
+    public Long getVideoPartHoldback() {
+        return null;
+    }
+
+    /**
+     * This method is not supported for AMP
+     * @return always null
+     */
+    @Override
+    public Long getVideoPartTargetDuration() {
+        return null;
+    }
+
+    /**
+     * This method is not supported for AMP
+     * @return always null
+     */
+    @Override
+    public Long getVideoTargetDuration() {
+        return null;
     }
 
     // MediaPlayer.OnVideoSizeChangedListener implementation
@@ -335,11 +442,19 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
     static class MuxDevice implements IDevice {
         private static final String MEDIA_PLAYER_SOFTWARE = "MediaPlayer";
 
+        static final String CONNECTION_TYPE_CELLULAR = "cellular";
+        static final String CONNECTION_TYPE_WIFI = "wifi";
+        static final String CONNECTION_TYPE_WIRED = "wired";
+        static final String CONNECTION_TYPE_OTHER = "other";
+
+        protected WeakReference<Context> contextRef;
+
         private String deviceId;
         private String appName = "";
         private String appVersion = "";
 
         MuxDevice(Context ctx) {
+            contextRef = new WeakReference<>(ctx);
             deviceId = Settings.Secure.getString(ctx.getContentResolver(),
                     Settings.Secure.ANDROID_ID);
             try {
@@ -405,6 +520,76 @@ public class MuxStatsMediaPlayer extends EventBus implements IPlayerListener,
         @Override
         public String getPlayerSoftware() {
             return MEDIA_PLAYER_SOFTWARE;
+        }
+
+        @Override
+        public String getNetworkConnectionType() {
+            // Checking internet connectivity
+            Context context = contextRef.get();
+            if (context == null) {
+                return null;
+            }
+            ConnectivityManager connectivityMgr = (ConnectivityManager) context
+                    .getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo activeNetwork = null;
+            if (connectivityMgr != null) {
+                activeNetwork = connectivityMgr.getActiveNetworkInfo();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    NetworkCapabilities nc = connectivityMgr
+                            .getNetworkCapabilities(connectivityMgr.getActiveNetwork());
+                    if (nc == null) {
+                        MuxLogger.d(TAG, "ERROR: Failed to obtain NetworkCapabilities manager !!!");
+                        return null;
+                    }
+                    if (nc.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
+                        return CONNECTION_TYPE_WIRED;
+                    } else if (nc.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                        return CONNECTION_TYPE_WIFI;
+                    } else if (nc.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                        return CONNECTION_TYPE_CELLULAR;
+                    } else {
+                        return CONNECTION_TYPE_OTHER;
+                    }
+                } else {
+                    if (activeNetwork.getType() == ConnectivityManager.TYPE_ETHERNET) {
+                        return CONNECTION_TYPE_WIRED;
+                    } else if (activeNetwork.getType() == ConnectivityManager.TYPE_WIFI) {
+                        return CONNECTION_TYPE_WIFI;
+                    } else if (activeNetwork.getType() == ConnectivityManager.TYPE_MOBILE) {
+                        return CONNECTION_TYPE_CELLULAR;
+                    } else {
+                        return CONNECTION_TYPE_OTHER;
+                    }
+                }
+            }
+            return null;
+        }
+
+        @Override
+        public long getElapsedRealtime() {
+            return SystemClock.elapsedRealtime();
+        }
+
+        @Override
+        public void outputLog(LogPriority logPriority, String tag, String msg) {
+            switch (logPriority) {
+                case ERROR:
+                    Log.e(tag, msg);
+                    break;
+                case WARN:
+                    Log.w(tag, msg);
+                    break;
+                case INFO:
+                    Log.i(tag, msg);
+                    break;
+                case DEBUG:
+                    Log.d(tag, msg);
+                    break;
+                case VERBOSE:
+                default: // fall-through
+                    Log.v(tag, msg);
+                    break;
+            }
         }
 
         @Override
