@@ -27,7 +27,6 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    //implementation 'androidx.appcompat:appcompat:1.4.0'
 
     // em - both dependencies on MuxCore are required due to an issue with fataar
     //  see https://github.com/kezong/fat-aar-android/issues/357
