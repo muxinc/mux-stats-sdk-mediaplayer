@@ -29,7 +29,7 @@ allprojects {
         minSdkVersion = 18
         targetSdkVersion = 31
 
-        muxCoreVersion = "7.0.7"
+        muxCoreVersion = "7.0.10"
     }
 }
 
