@@ -40,6 +40,7 @@ apply from: '../MuxAndroidSDKPublishing/fataar_flavor.gradle', to: android
 
 dependencies {
     notFatAarImplementation project(':MuxMediaPlayer')
+    notFatAarImplementation "com.mux:stats.muxcore:${project.ext.muxCoreVersion}"
     isFatAarApi 'com.mux.stats.sdk.muxstats:MuxMediaPlayer:'+project.ext.versionName
 
     implementation 'androidx.test.ext:junit:1.1.3'
