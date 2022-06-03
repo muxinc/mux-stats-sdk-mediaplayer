@@ -1,8 +1,7 @@
 env:
   SAUCECTL_LABEL: "$BUILDKITE_BUILD_NUMBER $BUILDKITE_PIPELINE_SLUG $BUILDKITE_BRANCH $BUILDKITE_COMMIT"
 steps:
-- agents: [queue=default-beta]
-  command: ./.buildkite/publish.sh
+- command: ./.buildkite/publish.sh
   label: Build AARs and APKs
   plugins:
     - artifacts#v1.3.0:
@@ -11,8 +10,7 @@ steps:
           - "MuxMediaPlayer/build/outputs/logs/*.txt"
           - "automatedtests/build/outputs/apk/**/*.apk"
 - wait
-- agents: [queue=default-beta]
-  command: docker run --rm -v $(pwd):/data -e BUILD_LABEL="$SAUCECTL_LABEL" -e TEST_APK=/data/automatedtests/build/outputs/apk/androidTest/isFatAar/debug/automatedtests-isFatAar-debug-androidTest.apk -e APP_APK=/data/automatedtests/build/outputs/apk/isFatAar/debug/automatedtests-isFatAar-debug.apk -e TEST_DEVICES='Google Pixel[ 345]*' -e SAUCE_USERNAME='mux-sauce' -e SAUCE_ACCESS_KEY=$SAUCE_ACCESS_KEY muxinc/saucectl-runner:0.73.1
+- command: docker run --rm -v $(pwd):/data -e BUILD_LABEL="$SAUCECTL_LABEL" -e TEST_APK=/data/automatedtests/build/outputs/apk/androidTest/isFatAar/debug/automatedtests-isFatAar-debug-androidTest.apk -e APP_APK=/data/automatedtests/build/outputs/apk/isFatAar/debug/automatedtests-isFatAar-debug.apk -e TEST_DEVICES='Google Pixel[ 345]*' -e SAUCE_USERNAME='mux-sauce' -e SAUCE_ACCESS_KEY=$SAUCE_ACCESS_KEY muxinc/saucectl-runner:0.73.1
   label: Test the Android Mux Stats MediaPlayer SDK
   retry:
     automatic:
@@ -28,7 +26,6 @@ steps:
   blocked_state: failed
   branches: "master"
 - wait
-- agents: [queue=default-beta]
-  command: ./.buildkite/deploy.sh
+- command: ./.buildkite/deploy.sh
   label: Deploy artifacts to release maven if it all worked
   branches: "master"
