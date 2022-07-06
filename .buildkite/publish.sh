@@ -4,7 +4,7 @@
 
 echo Building library to test
 
-docker run -it -v --rm  \
+docker run -it --rm  \
     -v $(pwd):/data \
     -e BUILDKITE_BRANCH="$BUILDKITE_BRANCH" \
     -e ORG_GRADLE_PROJECT_signingKeyId="$ORG_GRADLE_PROJECT_signingKeyId" \
@@ -18,7 +18,7 @@ docker run -it -v --rm  \
 
 echo Building and running test suite
 
-docker run -it -v --rm  \
+docker run -it --rm  \
     -v $(pwd):/data \
     -e BUILDKITE_BRANCH="$BUILDKITE_BRANCH" \
     -e ORG_GRADLE_PROJECT_signingKeyId="$ORG_GRADLE_PROJECT_signingKeyId" \
