@@ -1,1 +1,2 @@
 include ':MuxMediaPlayer', ":automatedtests"
+include ':app'
