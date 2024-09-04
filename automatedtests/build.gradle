@@ -39,7 +39,7 @@ android {
 }
 
 dependencies {
-    implementation project(':MuxMediaPlayer')
+    implementation project(':library')
     implementation "com.mux:stats.muxcore:${project.ext.muxCoreVersion}"
 
     implementation 'androidx.test.ext:junit:1.1.3'
