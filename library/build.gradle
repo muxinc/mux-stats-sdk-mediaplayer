@@ -1,0 +1,64 @@
+apply plugin: 'com.android.library'
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
+apply plugin: 'com.mux.gradle.android.mux-android-distribution'
+
+android {
+    compileSdk project.ext.compileSdkVersion
+    namespace "com.mux.stats.sdk.muxstats.mediaplayer"
+
+    defaultConfig {
+        minSdkVersion project.ext.minSdkVersion
+        targetSdkVersion project.ext.targetSdkVersion
+
+        buildConfigField("String", "MUX_PLUGIN_VERSION", "\"${versionName}\"")
+        buildConfigField("String", "MUX_PLUGIN_NAME", "\"android-mediaplayer-mux\"")
+
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility 1.8
+        targetCompatibility 1.8
+    }
+}
+
+muxDistribution {
+    devVersion versionFromCommitHash('dev-')
+    releaseVersion versionFromTag()
+    artifactIds just("MuxMediaPlayer")
+    groupIds just("com.mux.stats.sdk.muxstats")
+    publishIf { it.containsIgnoreCase("release") }
+    publicReleaseIf releaseIfCmdFlag("publicRelease")
+
+    dokkaConfig {
+        moduleName = "Mux Data SDK for Android MediaPlayer"
+        footer = "(c) " + new Date().format("yyyy") + " Mux, Inc. Have questions or need help?" +
+                " Contact support@mux.com"
+    }
+
+    // TODO: This is kinda clumsy, packageJavadocs should be a function not a property probably
+    packageJavadocs = releaseIfCmdFlag("publicRelease").call()
+    artifactoryConfig {
+        contextUrl = "https://muxinc.jfrog.io/artifactory/"
+        releaseRepoKey = 'default-maven-release-local'
+        devRepoKey = 'default-maven-local'
+    }
+}
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+
+    api "com.mux:stats.muxcore:${project.ext.muxCoreVersion}"
+}

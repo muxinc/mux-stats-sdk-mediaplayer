@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-  package="com.mux.stats.sdk.mediaplayer">
+  >
 
   <uses-permission android:name="android.permission.INTERNET" />
 
@@ -21,6 +21,7 @@
       android:launchMode="singleInstance"
       android:clearTaskOnLaunch="true"
       android:configChanges="keyboardHidden"
+        android:exported="true"
       android:theme="@style/Theme.AppCompat">
     </activity>
   </application>
